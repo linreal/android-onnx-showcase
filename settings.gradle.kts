@@ -16,6 +16,16 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        exclusiveContent {
+            forRepository {
+                maven {
+                    url = uri("${rootProject.projectDir}/third-party/maven")
+                }
+            }
+            filter {
+                includeGroup("gos.denver")
+            }
+        }
     }
 }
 
