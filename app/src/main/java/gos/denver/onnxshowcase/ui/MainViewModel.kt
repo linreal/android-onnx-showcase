@@ -1,7 +1,10 @@
 package gos.denver.onnxshowcase.ui
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import gos.denver.onnxshowcase.audio.AudioPlayer
+import gos.denver.onnxshowcase.audio.AudioRecorder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,9 +19,13 @@ import java.io.File
  * This ViewModel manages the complete application state and coordinates all audio
  * recording, processing, and playback operations.
  */
-class MainViewModel : ViewModel() {
+class MainViewModel(
+    private val audioRecorder: AudioRecorder,
+    private val audioPlayer: AudioPlayer
+) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private var appContext: Context? = null
 
     // Internal state tracking
     private var recordingJob: Job? = null
@@ -26,9 +33,7 @@ class MainViewModel : ViewModel() {
     private var durationUpdateJob: Job? = null
 
     // TODO: Inject these dependencies in production
-    // private val audioRecorder: AudioRecorder
     // private val concurrentProcessor: ConcurrentAudioProcessor
-    // private val audioPlayer: AudioPlayer
     // private val noiseSuppressor: NoiseSuppressor
 
     /**
@@ -42,6 +47,10 @@ class MainViewModel : ViewModel() {
         )
     }
 
+    fun setContext(context: Context) {
+        this.appContext = context.applicationContext
+    }
+
     /**
      * Initiates audio recording and processing pipeline.
      *
@@ -50,10 +59,12 @@ class MainViewModel : ViewModel() {
      * to reflect recording status.
      */
     fun startRecording() {
-        // Guard clause: Only start if we have permission and aren't already recording
+        // Only start if we have permission and aren't already recording
         if (!_uiState.value.hasRecordingPermission || _uiState.value.isRecording) {
             return
         }
+
+        val context = appContext ?: return
 
         // Clear previous recording data
         _uiState.value = _uiState.value.copy(
@@ -75,16 +86,11 @@ class MainViewModel : ViewModel() {
                 // Start duration tracking
                 startDurationTracking()
 
-                // TODO: Implement actual recording logic
-                // val rawOutputFile = File(context.cacheDir, "raw_audio_${System.currentTimeMillis()}.wav")
-                // val processedOutputFile = File(context.cacheDir, "processed_audio_${System.currentTimeMillis()}.wav")
+                // Create output file in cache directory
+                val outputFile = File(context.cacheDir, "raw_audio_${System.currentTimeMillis()}.3gp")
 
-                // concurrentProcessor.startProcessing(
-                //     recorder = audioRecorder,
-                //     suppressor = noiseSuppressor,
-                //     rawOutputFile = rawOutputFile,
-                //     processedOutputFile = processedOutputFile
-                // )
+                // Start actual recording
+                audioRecorder.startRecording(outputFile)
 
             } catch (e: Exception) {
                 // Handle recording errors
@@ -93,7 +99,7 @@ class MainViewModel : ViewModel() {
                     isProcessing = false
                 )
                 stopDurationTracking()
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging/user feedback
             }
         }
     }
@@ -120,21 +126,14 @@ class MainViewModel : ViewModel() {
                     isProcessing = true
                 )
 
-                // TODO: Implement actual stop logic
-                // val result = concurrentProcessor.stopProcessing()
+                // Stop actual recording
+                val outputFile = audioRecorder.stopRecording()
 
-                // Simulate processing time for demo
-                delay(1000)
-
-                // TODO: Replace with actual file paths from processing result
-                val mockRawPath = "mock_raw_audio.wav"
-                val mockProcessedPath = "mock_processed_audio.wav"
-
-                // Update state with completed files
+                // For now, we only have raw audio (no denoising yet)
                 _uiState.value = _uiState.value.copy(
                     isProcessing = false,
-                    originalAudioPath = mockRawPath,
-                    denoisedAudioPath = mockProcessedPath
+                    originalAudioPath = outputFile.absolutePath,
+                    denoisedAudioPath = outputFile.absolutePath // Same file for now, until ONNX is implemented
                 )
 
             } catch (e: Exception) {
@@ -143,11 +142,10 @@ class MainViewModel : ViewModel() {
                     isRecording = false,
                     isProcessing = false
                 )
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging/user feedback
             }
         }
     }
-
     /**
      * Begins playback of the raw recorded audio.
      *
@@ -165,13 +163,11 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isOriginalPlaying = true)
-
-                // TODO: Implement actual playback
-                // audioPlayer.play(File(audioPath))
+                audioPlayer.play(File(audioPath))
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isOriginalPlaying = false)
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging
             }
         }
     }
@@ -187,12 +183,10 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isOriginalPlaying = false)
-
-                // TODO: Implement actual pause
-                // audioPlayer.pause()
+                audioPlayer.pause()
 
             } catch (e: Exception) {
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging
             }
         }
     }
@@ -214,13 +208,11 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isDenoisedPlaying = true)
-
-                // TODO: Implement actual playback
-                // audioPlayer.play(File(audioPath))
+                audioPlayer.play(File(audioPath))
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isDenoisedPlaying = false)
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging
             }
         }
     }
@@ -236,15 +228,14 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isDenoisedPlaying = false)
-
-                // TODO: Implement actual pause
-                // audioPlayer.pause()
+                audioPlayer.pause()
 
             } catch (e: Exception) {
-                // TODO: Add error handling/logging
+                // TODO: Add proper error logging
             }
         }
     }
+
 
     /**
      * Starts tracking recording duration with real-time updates.
@@ -254,7 +245,7 @@ class MainViewModel : ViewModel() {
             while (_uiState.value.isRecording) {
                 val currentDuration = System.currentTimeMillis() - recordingStartTime
                 _uiState.value = _uiState.value.copy(recordingDuration = currentDuration)
-                delay(100) // Update every 100ms for smooth UI
+                delay(100)
             }
         }
     }
@@ -275,8 +266,16 @@ class MainViewModel : ViewModel() {
         recordingJob?.cancel()
         stopDurationTracking()
 
-        // TODO: Clean up audio components
-        // audioPlayer.stop()
-        // noiseSuppressor.release()
+        // CHANGED: Real cleanup
+        viewModelScope.launch {
+            try {
+                if (audioRecorder.isRecording()) {
+                    audioRecorder.stopRecording()
+                }
+                audioPlayer.stop()
+            } catch (e: Exception) {
+                // Ignore cleanup errors
+            }
+        }
     }
 }

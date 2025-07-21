@@ -26,13 +26,17 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import gos.denver.onnxshowcase.ui.MainViewModel
+import gos.denver.onnxshowcase.ui.MainViewModelFactory
 import gos.denver.onnxshowcase.ui.theme.OnnxShowcaseTheme
 
 class MainActivity : ComponentActivity() {
-    private val viewModel: MainViewModel by viewModels()
 
+    private val viewModel: MainViewModel by viewModels {
+        MainViewModelFactory(this)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel.setContext(this)
         enableEdgeToEdge()
         setContent {
             OnnxShowcaseTheme {
