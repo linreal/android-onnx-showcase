@@ -26,7 +26,6 @@ import java.io.File
  * recording, processing, and playback operations.
  */
 class MainViewModel(
-    private val audioRecorder: AudioRecorder,
     private val audioPlayer: AudioPlayer,
     private val noiseSuppressor: NoiseSuppressor,
     private val concurrentProcessor: ConcurrentAudioProcessor,
@@ -41,6 +40,17 @@ class MainViewModel(
     private var recordingStartTime: Long = 0L
     private var durationUpdateJob: Job? = null
 
+
+    init {
+        audioPlayer.setOnPlaybackCompleteListener {
+            viewModelScope.launch {
+                _uiState.value = _uiState.value.copy(
+                    isOriginalPlaying = false,
+                    isDenoisedPlaying = false
+                )
+            }
+        }
+    }
 
     /**
      * Updates the permission state in the UI.
@@ -93,7 +103,6 @@ class MainViewModel(
                 val processedOutputFile = File(cacheDir, "processed_audio_$timestamp.wav")
 
                 concurrentProcessor.startProcessing(
-                    recorder = audioRecorder, // This parameter is ignored in our implementation
                     suppressor = noiseSuppressor,
                     rawOutputFile = rawOutputFile,
                     processedOutputFile = processedOutputFile
@@ -287,10 +296,6 @@ class MainViewModel(
                     noiseSuppressor.release()
                 }
 
-                // Original cleanup
-                if (audioRecorder.isRecording()) {
-                    audioRecorder.stopRecording()
-                }
                 audioPlayer.stop()
             } catch (e: Exception) {
                 // Ignore cleanup errors

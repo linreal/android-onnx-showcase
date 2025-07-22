@@ -12,9 +12,8 @@ import java.io.File
  * Implements concurrent audio recording and processing pipeline.
  * Coordinates real-time recording, denoising, and dual file output.
  */
-
 class ConcurrentAudioProcessorImpl(
-    private val rawAudioRecorder: RawAudioRecorderImpl,
+    private val rawAudioRecorder: AudioRecorder,
     private val cacheDir: File
 ) : ConcurrentAudioProcessor {
 
@@ -23,10 +22,9 @@ class ConcurrentAudioProcessorImpl(
     private var processedChunksCount = 0
     private var processingStartTime = 0L
     private val scope = CoroutineScope(Dispatchers.IO)
-    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
 
+    @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     override suspend fun startProcessing(
-        recorder: AudioRecorder,
         suppressor: NoiseSuppressor,
         rawOutputFile: File,
         processedOutputFile: File
@@ -71,7 +69,6 @@ class ConcurrentAudioProcessorImpl(
                 processedFileWriter.finalizeFile()
 
             } catch (e: Exception) {
-                // Handle processing errors
                 throw e
             }
         }

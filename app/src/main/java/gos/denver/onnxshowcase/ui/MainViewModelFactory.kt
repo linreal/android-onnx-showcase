@@ -5,7 +5,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import gos.denver.onnxshowcase.audio.impl.AudioPlayerImpl
-import gos.denver.onnxshowcase.audio.impl.AudioRecorderImpl
 import gos.denver.onnxshowcase.audio.impl.ConcurrentAudioProcessorImpl
 import gos.denver.onnxshowcase.audio.impl.NoiseSuppressorImpl
 import gos.denver.onnxshowcase.audio.impl.RawAudioRecorderImpl
@@ -22,7 +21,6 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
                 cacheDir = context.applicationContext.cacheDir
             )
             return MainViewModel(
-                audioRecorder = AudioRecorderImpl(context.applicationContext),
                 audioPlayer = AudioPlayerImpl(),
                 concurrentProcessor = concurrentProcessor,
                 noiseSuppressor = noiseSuppressor,

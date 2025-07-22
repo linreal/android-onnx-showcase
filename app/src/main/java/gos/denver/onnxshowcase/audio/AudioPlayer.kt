@@ -52,4 +52,11 @@ interface AudioPlayer {
      * @return Current position in milliseconds
      */
     fun getCurrentPosition(): Long
+
+    /**
+     * Sets a callback to be invoked when audio playback completes naturally.
+     *
+     * @param callback Function to call when playback finishes
+     */
+    fun setOnPlaybackCompleteListener(callback: () -> Unit)
 }

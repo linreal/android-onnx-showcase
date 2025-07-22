@@ -22,7 +22,6 @@ interface ConcurrentAudioProcessor {
      * @param processedOutputFile Destination for denoised audio
      */
     suspend fun startProcessing(
-        recorder: AudioRecorder,
         suppressor: NoiseSuppressor,
         rawOutputFile: File,
         processedOutputFile: File

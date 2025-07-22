@@ -6,7 +6,9 @@ import android.media.MediaRecorder
 import androidx.annotation.RequiresPermission
 import gos.denver.onnxshowcase.audio.AudioConstants
 import gos.denver.onnxshowcase.audio.AudioConversionUtils
+import gos.denver.onnxshowcase.audio.AudioRecorder
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
@@ -17,7 +19,7 @@ import java.nio.ByteOrder
  * AudioRecord-based implementation for capturing raw PCM audio data.
  * This enables real-time processing of audio chunks.
  */
-class RawAudioRecorderImpl {
+class RawAudioRecorderImpl : AudioRecorder {
     private var audioRecord: AudioRecord? = null
     private var isCurrentlyRecording = false
     private var recordingStartTime: Long = 0L
@@ -36,7 +38,7 @@ class RawAudioRecorderImpl {
      * Initializes AudioRecord for capturing raw PCM data.
      */
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
-    suspend fun initialize() = withContext(Dispatchers.IO) {
+    override suspend fun initialize() = withContext(Dispatchers.IO) {
         if (audioRecord != null) return@withContext
 
         audioRecord = AudioRecord(
@@ -55,7 +57,7 @@ class RawAudioRecorderImpl {
     /**
      * Starts recording and returns a sequence of audio chunks.
      */
-    suspend fun startRecording(): kotlinx.coroutines.flow.Flow<ShortArray> = withContext(Dispatchers.IO) {
+    override suspend fun startRecording(): Flow<ShortArray> = withContext(Dispatchers.IO) {
         val audioRecord = this@RawAudioRecorderImpl.audioRecord
             ?: throw IllegalStateException("AudioRecord not initialized")
 
@@ -83,28 +85,22 @@ class RawAudioRecorderImpl {
         }
     }
 
-    /**
-     * Stops recording.
-     */
-    suspend fun stopRecording() = withContext(Dispatchers.IO) {
-        isCurrentlyRecording = false
-        audioRecord?.stop()
+    override suspend fun stopRecording() {
+        withContext(Dispatchers.IO) {
+            isCurrentlyRecording = false
+            audioRecord?.stop()
+        }
     }
 
     /**
      * Releases AudioRecord resources.
      */
-    fun release() {
+    override fun release() {
         audioRecord?.release()
         audioRecord = null
         isCurrentlyRecording = false
     }
 
-    fun isRecording(): Boolean = isCurrentlyRecording
+    override fun isRecording(): Boolean = isCurrentlyRecording
 
-    fun getRecordingDuration(): Long {
-        return if (isCurrentlyRecording) {
-            System.currentTimeMillis() - recordingStartTime
-        } else 0L
-    }
 }

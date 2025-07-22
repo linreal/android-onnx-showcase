@@ -11,6 +11,7 @@ import ai.onnxruntime.OrtSession
 import android.os.Build
 import android.util.Log
 import gos.denver.fft.FFTNative
+import gos.denver.onnxshowcase.audio.AudioConstants.CHUNK_SIZE
 import java.nio.FloatBuffer
 
 /**
@@ -44,7 +45,7 @@ class NoiseSuppressorImpl(private val context: Context) : NoiseSuppressor {
 
     companion object {
         private const val TAG = "NoiseSuppressorImpl"
-        private const val BLOCK_LEN = 512
+        private const val BLOCK_LEN = AudioConstants.CHUNK_SIZE
         private const val BLOCK_SHIFT = 128
         private const val INPUT_2 = "input_2"
         private const val INPUT_3 = "input_3"

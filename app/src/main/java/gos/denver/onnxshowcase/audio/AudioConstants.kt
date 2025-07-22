@@ -18,7 +18,4 @@ object AudioConstants {
 
     /** Processing chunk size in samples (DTLN frame size) */
     const val CHUNK_SIZE = 512
-
-    /** ONNX model filename */
-    const val MODEL_FILE_NAME = "dtln_model.onnx" //todo linreal
 }

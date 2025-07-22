@@ -9,6 +9,7 @@ import java.io.File
 class AudioPlayerImpl : AudioPlayer {
     private var mediaPlayer: MediaPlayer? = null
     private var isPaused = false
+    private var onPlaybackComplete: (() -> Unit)? = null
 
     override suspend fun play(audioFile: File) = withContext(Dispatchers.IO) {
         try {
@@ -22,6 +23,9 @@ class AudioPlayerImpl : AudioPlayer {
 
             mediaPlayer = MediaPlayer().apply {
                 setDataSource(audioFile.absolutePath)
+                setOnCompletionListener {
+                    onPlaybackComplete?.invoke()
+                }
                 prepare()
                 start()
             }
@@ -49,6 +53,10 @@ class AudioPlayerImpl : AudioPlayer {
         }
         mediaPlayer = null
         isPaused = false
+    }
+
+    override fun setOnPlaybackCompleteListener(callback: () -> Unit) {
+        onPlaybackComplete = callback
     }
 
     override fun isPlaying(): Boolean {
