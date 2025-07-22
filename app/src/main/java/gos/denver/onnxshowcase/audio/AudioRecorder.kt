@@ -9,6 +9,7 @@ import java.io.File
  * This interface abstracts MediaRecorder functionality for clean separation
  * of concerns and testability.
  */
+//todo linreal remove
 interface AudioRecorder {
     /**
      * Begins audio capture from the default microphone.

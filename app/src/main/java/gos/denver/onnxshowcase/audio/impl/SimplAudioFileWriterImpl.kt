@@ -11,22 +11,17 @@ import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/**
- * Fixed implementation of AudioFileWriter that creates proper WAV files.
- */
 class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
     private var currentFile: File? = null
     private var fileOutputStream: FileOutputStream? = null
     private var dataSize = 0
 
     override suspend fun createFile(fileName: String): File = withContext(Dispatchers.IO) {
-        // FIXED: Close any existing file first
         finalizeCurrentFile()
 
         val file = File(cacheDir, fileName)
         file.parentFile?.mkdirs()
 
-        // FIXED: Delete existing file if it exists
         if (file.exists()) {
             file.delete()
         }
@@ -35,7 +30,6 @@ class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
         currentFile = file
         dataSize = 0
 
-        // FIXED: Write placeholder WAV header with 0 data size initially
         writeWavHeader(fileOutputStream!!, 0)
 
         file
@@ -48,9 +42,8 @@ class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
         val shortArray = AudioConversionUtils.floatArrayToShortArray(data)
         val byteArray = AudioConversionUtils.shortArrayToByteArray(shortArray)
 
-        // FIXED: Simply append the data, don't rewrite header
         outputStream.write(byteArray)
-        outputStream.flush() // ADDED: Ensure data is written immediately
+        outputStream.flush()
         dataSize += byteArray.size
     }
 
@@ -64,7 +57,6 @@ class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
     override fun getSampleRate(): Int = AudioConstants.SAMPLE_RATE
     override fun getChannelCount(): Int = AudioConstants.CHANNEL_COUNT
 
-    // ADDED: Helper method to properly finalize current file
     private suspend fun finalizeCurrentFile() = withContext(Dispatchers.IO) {
         val file = currentFile ?: return@withContext
         val outputStream = fileOutputStream ?: return@withContext
@@ -73,7 +65,6 @@ class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
             // Close the stream first
             outputStream.close()
 
-            // FIXED: Use RandomAccessFile to update header in place
             RandomAccessFile(file, "rw").use { randomAccessFile ->
                 // Update file size in RIFF header (at offset 4)
                 randomAccessFile.seek(4)
@@ -92,7 +83,7 @@ class SimpleAudioFileWriterImpl(private val cacheDir: File) : AudioFileWriter {
     }
 
     /**
-     * FIXED: Writes WAV file header with proper byte order.
+     * Writes WAV file header with proper byte order.
      */
     private fun writeWavHeader(outputStream: FileOutputStream, dataSize: Int) {
         val header = ByteArray(44)

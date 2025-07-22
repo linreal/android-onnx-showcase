@@ -16,7 +16,7 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             val rawAudioRecorder = RawAudioRecorderImpl()
-            val noiseSuppressor = NoiseSuppressorImpl()
+            val noiseSuppressor = NoiseSuppressorImpl(context.applicationContext)
             val concurrentProcessor = ConcurrentAudioProcessorImpl(
                 rawAudioRecorder = rawAudioRecorder,
                 cacheDir = context.applicationContext.cacheDir

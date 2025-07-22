@@ -88,12 +88,10 @@ class MainViewModel(
                 // Start duration tracking
                 startDurationTracking()
 
-                // ADD: Create output files with timestamp
                 val timestamp = System.currentTimeMillis()
                 val rawOutputFile = File(cacheDir, "raw_audio_$timestamp.wav")
                 val processedOutputFile = File(cacheDir, "processed_audio_$timestamp.wav")
 
-                // ADD: Start concurrent processing pipeline
                 concurrentProcessor.startProcessing(
                     recorder = audioRecorder, // This parameter is ignored in our implementation
                     suppressor = noiseSuppressor,
@@ -136,13 +134,10 @@ class MainViewModel(
                     isProcessing = true
                 )
 
-                // ADD: Stop concurrent processing and get results
                 val result = concurrentProcessor.stopProcessing()
 
-                // ADD: Release noise suppressor resources
                 noiseSuppressor.release()
 
-                // UPDATE: Set both file paths from processing result
                 _uiState.value = _uiState.value.copy(
                     isProcessing = false,
                     originalAudioPath = result.rawAudioFile.absolutePath,

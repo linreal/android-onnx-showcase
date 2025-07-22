@@ -1,6 +1,5 @@
 package gos.denver.onnxshowcase.audio.impl
 
-import android.util.Log
 import androidx.annotation.RequiresPermission
 import gos.denver.onnxshowcase.audio.AudioConversionUtils
 import gos.denver.onnxshowcase.audio.AudioRecorder
@@ -47,7 +46,6 @@ class ConcurrentAudioProcessorImpl(
             val processedFileWriter = SimpleAudioFileWriterImpl(cacheDir)
 
             try {
-                // FIXED: Use the actual file names passed as parameters
                 rawFileWriter.createFile(rawOutputFile.name)
                 processedFileWriter.createFile(processedOutputFile.name)
 
@@ -92,8 +90,6 @@ class ConcurrentAudioProcessorImpl(
 
         val duration = System.currentTimeMillis() - processingStartTime
 
-        // FIXED: Return the actual files that were created
-        // Note: We need to store these file references during startProcessing
         return ConcurrentAudioProcessor.ProcessingResult(
             rawAudioFile = File(cacheDir, "raw_audio_${processingStartTime}.wav"),
             processedAudioFile = File(cacheDir, "processed_audio_${processingStartTime}.wav"),

@@ -31,4 +31,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Onnx Showcase"
 include(":app")
- 
+include(":core-fft")
