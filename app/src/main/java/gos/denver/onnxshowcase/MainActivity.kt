@@ -19,7 +19,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -190,9 +192,9 @@ fun RecordingControlButton(
     }
 
     val buttonIcon = when {
-        !hasPermission -> Icons.Default.Menu //mic //todo linreal
-        isRecording -> Icons.Default.Star //stop
-        else -> Icons.Default.Menu //mic
+        !hasPermission -> ImageVector.vectorResource(id = R.drawable.mic)
+        isRecording -> ImageVector.vectorResource(id = R.drawable.stop)
+        else -> ImageVector.vectorResource(id = R.drawable.mic)
     }
 
     val buttonColors = if (isRecording) {
