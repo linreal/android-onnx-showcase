@@ -18,10 +18,17 @@ class ConcurrentAudioProcessorImpl(
 ) : ConcurrentAudioProcessor {
 
     private var processingJob: Job? = null
+
+    @Volatile
     private var isProcessing = false
+
     private var processedChunksCount = 0
     private var processingStartTime = 0L
-    private val scope = CoroutineScope(Dispatchers.IO)
+
+    private var currentRawOutputFile: File? = null
+    private var currentProcessedOutputFile: File? = null
+
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     @RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     override suspend fun startProcessing(
@@ -34,6 +41,9 @@ class ConcurrentAudioProcessorImpl(
         isProcessing = true
         processedChunksCount = 0
         processingStartTime = System.currentTimeMillis()
+
+        this.currentRawOutputFile = rawOutputFile
+        this.currentProcessedOutputFile = processedOutputFile
 
         // Initialize components
         rawAudioRecorder.initialize()
@@ -49,7 +59,7 @@ class ConcurrentAudioProcessorImpl(
 
                 // Start recording and process chunks
                 rawAudioRecorder.startRecording().collect { audioChunk ->
-                    if (!isProcessing) return@collect
+                    if (!isProcessing || !isActive) return@collect
 
                     // Convert to float array for processing
                     val floatChunk = AudioConversionUtils.shortArrayToFloatArray(audioChunk)
@@ -64,12 +74,14 @@ class ConcurrentAudioProcessorImpl(
                     processedChunksCount++
                 }
 
-                // Finalize files
-                rawFileWriter.finalizeFile()
-                processedFileWriter.finalizeFile()
+
 
             } catch (e: Exception) {
                 throw e
+            } finally {
+                // Finalize files
+                rawFileWriter.finalizeFile()
+                processedFileWriter.finalizeFile()
             }
         }
     }
@@ -87,9 +99,12 @@ class ConcurrentAudioProcessorImpl(
 
         val duration = System.currentTimeMillis() - processingStartTime
 
+        val finalRawFile = currentRawOutputFile ?: throw IllegalStateException("Raw output file is null")
+        val finalProcessedFile = currentProcessedOutputFile ?: throw IllegalStateException("Processed output file is null")
+
         return ConcurrentAudioProcessor.ProcessingResult(
-            rawAudioFile = File(cacheDir, "raw_audio_${processingStartTime}.wav"),
-            processedAudioFile = File(cacheDir, "processed_audio_${processingStartTime}.wav"),
+            rawAudioFile = finalRawFile,
+            processedAudioFile = finalProcessedFile,
             duration = duration,
             chunksProcessed = processedChunksCount
         )
