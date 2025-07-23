@@ -30,6 +30,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import gos.denver.onnxshowcase.ui.MainViewModel
 import gos.denver.onnxshowcase.ui.MainViewModelFactory
 import gos.denver.onnxshowcase.ui.theme.OnnxShowcaseTheme
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
@@ -49,11 +50,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+private fun MainScreen(viewModel: MainViewModel) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
-    // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -88,14 +88,12 @@ fun MainScreen(viewModel: MainViewModel) {
                 textAlign = TextAlign.Center
             )
 
-            // Status display
             StatusCard(
                 isRecording = uiState.isRecording,
                 isProcessing = uiState.isProcessing,
                 duration = uiState.recordingDuration
             )
 
-            // Main control button
             RecordingControlButton(
                 isRecording = uiState.isRecording,
                 hasPermission = uiState.hasRecordingPermission,
@@ -130,7 +128,7 @@ fun MainScreen(viewModel: MainViewModel) {
 }
 
 @Composable
-fun StatusCard(
+private fun StatusCard(
     isRecording: Boolean,
     isProcessing: Boolean,
     duration: Long
@@ -169,7 +167,7 @@ fun StatusCard(
                 val minutes = duration / 60000
                 val seconds = (duration % 60000) / 1000
                 Text(
-                    text = String.format("%02d:%02d", minutes, seconds),
+                    text = String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds),
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -179,7 +177,7 @@ fun StatusCard(
 }
 
 @Composable
-fun RecordingControlButton(
+private fun RecordingControlButton(
     isRecording: Boolean,
     hasPermission: Boolean,
     onStartRecording: () -> Unit,
@@ -235,7 +233,7 @@ fun RecordingControlButton(
 }
 
 @Composable
-fun AudioPlaybackSection(
+private fun AudioPlaybackSection(
     title: String,
     isPlaying: Boolean,
     onPlay: () -> Unit,

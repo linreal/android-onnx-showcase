@@ -16,7 +16,6 @@ interface ConcurrentAudioProcessor {
      * Manages concurrent coroutines for recording and processing,
      * handles audio format conversion between components.
      *
-     * @param recorder Audio capture component
      * @param suppressor ONNX denoising component
      * @param rawOutputFile Destination for raw audio
      * @param processedOutputFile Destination for denoised audio

@@ -24,7 +24,7 @@ class MainViewModelFactory(private val context: Context) : ViewModelProvider.Fac
                 audioPlayer = AudioPlayerImpl(),
                 concurrentProcessor = concurrentProcessor,
                 noiseSuppressor = noiseSuppressor,
-                rawAudioRecorder = rawAudioRecorder,
+                audioRecorder = rawAudioRecorder,
                 cacheDir = context.cacheDir
             ) as T
         }

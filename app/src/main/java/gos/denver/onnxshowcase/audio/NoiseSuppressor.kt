@@ -15,11 +15,8 @@ interface NoiseSuppressor {
      *
      * Creates ONNX Runtime session, allocates necessary buffers for processing,
      * and initializes internal state for DTLN model.
-     *
-     * @param modelPath Path to the .onnx model file
-     * @throws OrtException if model loading fails
      */
-    suspend fun initialize(modelPath: String)
+    suspend fun initialize()
 
     /**
      * Processes a single audio chunk through the DTLN model.

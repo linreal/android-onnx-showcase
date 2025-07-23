@@ -1,6 +1,5 @@
 package gos.denver.onnxshowcase.ui
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,15 +7,12 @@ import gos.denver.onnxshowcase.audio.AudioPlayer
 import gos.denver.onnxshowcase.audio.AudioRecorder
 import gos.denver.onnxshowcase.audio.ConcurrentAudioProcessor
 import gos.denver.onnxshowcase.audio.NoiseSuppressor
-import gos.denver.onnxshowcase.audio.impl.ConcurrentAudioProcessorImpl
-import gos.denver.onnxshowcase.audio.impl.NoiseSuppressorImpl
-import gos.denver.onnxshowcase.audio.impl.RawAudioRecorderImpl
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import java.io.File
 
 /**
@@ -29,7 +25,7 @@ class MainViewModel(
     private val audioPlayer: AudioPlayer,
     private val noiseSuppressor: NoiseSuppressor,
     private val concurrentProcessor: ConcurrentAudioProcessor,
-    private val rawAudioRecorder: RawAudioRecorderImpl,
+    private val audioRecorder: AudioRecorder,
     private val cacheDir: File
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
@@ -71,7 +67,6 @@ class MainViewModel(
      * to reflect recording status.
      */
     fun startRecording() {
-        // Guard clause: Only start if we have permission and aren't already recording
         if (!_uiState.value.hasRecordingPermission || _uiState.value.isRecording) {
             return
         }
@@ -86,7 +81,7 @@ class MainViewModel(
 
         recordingJob = viewModelScope.launch {
             try {
-                noiseSuppressor.initialize("fake_model_path") // Fake path for now
+                noiseSuppressor.initialize()
 
                 // Update state to recording
                 recordingStartTime = System.currentTimeMillis()
@@ -109,14 +104,13 @@ class MainViewModel(
                 )
 
             } catch (e: Exception) {
-                // Handle recording errors
+                Log.e(TAG, "Error starting recording", e)
                 _uiState.value = _uiState.value.copy(
                     isRecording = false,
                     isProcessing = false
                 )
                 stopDurationTracking()
                 noiseSuppressor.release()
-                // TODO: Add proper error logging/user feedback
             }
         }
     }
@@ -154,13 +148,11 @@ class MainViewModel(
                 )
 
             } catch (e: Exception) {
-                // Handle processing errors
                 _uiState.value = _uiState.value.copy(
                     isRecording = false,
                     isProcessing = false
                 )
                 noiseSuppressor.release()
-                // TODO: Add proper error logging/user feedback
             }
         }
     }
@@ -173,7 +165,6 @@ class MainViewModel(
     fun playOriginalAudio() {
 
         val audioPath = _uiState.value.originalAudioPath ?: return
-        Log.e("ProcessingTag", "playOriginalAudio: $audioPath", )
         // Stop denoised audio if playing
         if (_uiState.value.isDenoisedPlaying) {
             pauseDenoisedAudio()
@@ -186,7 +177,7 @@ class MainViewModel(
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isOriginalPlaying = false)
-                // TODO: Add proper error logging
+                Log.e(TAG, "Error playing original audio", e)
             }
         }
     }
@@ -205,7 +196,7 @@ class MainViewModel(
                 audioPlayer.pause()
 
             } catch (e: Exception) {
-                // TODO: Add proper error logging
+                Log.e(TAG, "Error pausing original audio", e)
             }
         }
     }
@@ -231,7 +222,7 @@ class MainViewModel(
 
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isDenoisedPlaying = false)
-                // TODO: Add proper error logging
+                Log.e(TAG, "Error playing denoised audio", e)
             }
         }
     }
@@ -250,7 +241,7 @@ class MainViewModel(
                 audioPlayer.pause()
 
             } catch (e: Exception) {
-                // TODO: Add proper error logging
+                Log.e(TAG, "Error pausing denoised audio", e)
             }
         }
     }
@@ -287,10 +278,10 @@ class MainViewModel(
 
         viewModelScope.launch {
             try {
-                if (rawAudioRecorder.isRecording()) {
-                    rawAudioRecorder.stopRecording()
+                if (audioRecorder.isRecording()) {
+                    audioRecorder.stopRecording()
                 }
-                rawAudioRecorder.release()
+                audioRecorder.release()
 
                 if (noiseSuppressor.isInitialized()) {
                     noiseSuppressor.release()
@@ -301,5 +292,9 @@ class MainViewModel(
                 // Ignore cleanup errors
             }
         }
+    }
+
+    private companion object {
+        const val TAG = "MainViewModel"
     }
 }

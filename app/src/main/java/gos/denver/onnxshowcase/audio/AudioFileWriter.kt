@@ -16,7 +16,6 @@ interface AudioFileWriter {
      *
      * @param fileName Name for the output file
      * @return File handle for writing
-     * @throws IOException if file creation fails
      */
     suspend fun createFile(fileName: String): File
 

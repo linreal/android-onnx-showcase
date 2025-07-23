@@ -27,19 +27,6 @@ object AudioConversionUtils {
     }
 
     /**
-     * Converts byte array from AudioRecord to short array.
-     */
-    fun byteArrayToShortArray(byteArray: ByteArray): ShortArray {
-        val shortArray = ShortArray(byteArray.size / 2)
-        for (i in shortArray.indices) {
-            val low = byteArray[i * 2].toInt() and 0xFF
-            val high = byteArray[i * 2 + 1].toInt() and 0xFF
-            shortArray[i] = (high shl 8 or low).toShort()
-        }
-        return shortArray
-    }
-
-    /**
      * Converts short array to byte array for file writing.
      */
     fun shortArrayToByteArray(shortArray: ShortArray): ByteArray {

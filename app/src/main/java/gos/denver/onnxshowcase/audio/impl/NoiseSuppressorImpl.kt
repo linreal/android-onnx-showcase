@@ -66,7 +66,7 @@ class NoiseSuppressorImpl(private val context: Context) : NoiseSuppressor {
         setExecutionMode(OrtSession.SessionOptions.ExecutionMode.SEQUENTIAL)
     }
 
-    override suspend fun initialize(modelPath: String) {
+    override suspend fun initialize() {
         withContext(Dispatchers.IO) {
             try {
                 env = OrtEnvironment.getEnvironment()
@@ -214,7 +214,6 @@ class NoiseSuppressorImpl(private val context: Context) : NoiseSuppressor {
         } catch (e: Exception) {
             Log.e(TAG, "Error during resource cleanup", e)
         } finally {
-            // Clear all references
             modelOutputs1 = null
             modelOutputs2 = null
             input2Tensor = null
